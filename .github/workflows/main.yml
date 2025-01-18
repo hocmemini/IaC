@@ -6,14 +6,14 @@ on:
       - main
     paths:
       - 'aws/terraform/**'
-      - '.github/workflows/terraform-deploy.yml'
+      - '.github/workflows/main.yml'
   pull_request:
     branches:
       - main
     paths:
       - 'aws/terraform/**'
-      - '.github/workflows/terraform-deploy.yml'
-  workflow_dispatch:  # Allow manual triggering
+      - '.github/workflows/main.yml'
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -37,20 +37,20 @@ jobs:
       
     defaults:
       run:
-        working-directory: ./terraform
+        working-directory: ./aws/terraform    
         shell: bash
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Fetch all history for branch comparison
+          fetch-depth: 0
 
       - name: Setup Terraform Cache
         uses: actions/cache@v4
         with:
           path: ~/.terraform.d/plugin-cache
-          key: ${{ runner.os }}-terraform-${{ hashFiles('**/.terraform.lock.hcl') }}
+          key: ${{ runner.os }}-terraform-${{ hashFiles('**/aws/terraform/.terraform.lock.hcl') }}
           restore-keys: |
             ${{ runner.os }}-terraform-
 
@@ -62,12 +62,14 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
           mask-aws-account-id: true
 
+      - name: Verify AWS Credentials
+        run: aws sts get-caller-identity
+
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "1.7.0"
           terraform_wrapper: false
-          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
 
       - name: Terraform Format Check
         id: fmt
@@ -89,7 +91,7 @@ jobs:
         if: github.event_name == 'pull_request'
         run: |
           git fetch origin ${{ github.base_ref }}
-          if ! git diff --quiet origin/${{ github.base_ref }} HEAD -- ./terraform/; then
+          if ! git diff --quiet origin/${{ github.base_ref }} HEAD -- ./aws/terraform/; then
             echo "changes=true" >> $GITHUB_OUTPUT
           else
             echo "changes=false" >> $GITHUB_OUTPUT
@@ -111,7 +113,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const fs = require('fs');
-            const plan = fs.readFileSync('terraform/plan.txt', 'utf8');
+            const plan = fs.readFileSync('aws/terraform/plan.txt', 'utf8');
             const output = `#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
             #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
             #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
