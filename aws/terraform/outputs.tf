@@ -1,4 +1,4 @@
-output "instance_public_ip" {
+utput "instance_public_ip" {
   description = "Public IP address of the Windows Server instance"
   value       = aws_instance.windows_server.public_ip
 }
