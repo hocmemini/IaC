@@ -143,4 +143,3 @@ resource "aws_instance" "windows_server" {
     }
   )
 }
-
