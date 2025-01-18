@@ -5,13 +5,13 @@ on:
     branches:
       - main
     paths:
-      - 'terraform/**'
+      - 'aws/terraform/**'
       - '.github/workflows/terraform-deploy.yml'
   pull_request:
     branches:
       - main
     paths:
-      - 'terraform/**'
+      - 'aws/terraform/**'
       - '.github/workflows/terraform-deploy.yml'
   workflow_dispatch:  # Allow manual triggering
 
