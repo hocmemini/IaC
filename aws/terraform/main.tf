@@ -1,4 +1,4 @@
-# VPC Resources
+# VPC and Networking
 resource "aws_vpc" "main" {
   cidr_block           = var.vpc_cidr
   enable_dns_hostnames = true
@@ -83,7 +83,6 @@ resource "aws_key_pair" "generated_key" {
   public_key = tls_private_key.key_pair.public_key_openssh
 }
 
-# Save private key locally
 resource "local_file" "private_key" {
   content  = tls_private_key.key_pair.private_key_pem
   filename = "${path.module}/${var.project}-key.pem"
