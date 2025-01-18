@@ -133,3 +133,4 @@ resource "aws_instance" "windows_server" {
     Name = var.instance_name
   }
 }
+
