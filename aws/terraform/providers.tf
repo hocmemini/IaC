@@ -15,3 +15,7 @@ terraform {
     path = "terraform.tfstate"
   }
 }
+
+provider "aws" {
+  region = var.aws_region
+}
