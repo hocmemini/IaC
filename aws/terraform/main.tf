@@ -1,39 +1,31 @@
+# VPC Resources
 resource "aws_vpc" "main" {
-  cidr_block           = "10.0.0.0/16"
+  cidr_block           = var.vpc_cidr
   enable_dns_hostnames = true
   enable_dns_support   = true
 
-  tags = merge(
-    local.common_tags,
-    {
-      Name = "windows-server-vpc"
-    }
-  )
+  tags = {
+    Name = "${var.project}-vpc"
+  }
 }
 
 resource "aws_subnet" "main" {
   vpc_id                  = aws_vpc.main.id
-  cidr_block              = "10.0.1.0/24"
+  cidr_block              = var.subnet_cidr
   map_public_ip_on_launch = true
   availability_zone       = "${var.aws_region}a"
 
-  tags = merge(
-    local.common_tags,
-    {
-      Name = "windows-server-subnet"
-    }
-  )
+  tags = {
+    Name = "${var.project}-subnet"
+  }
 }
 
 resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
 
-  tags = merge(
-    local.common_tags,
-    {
-      Name = "windows-server-igw"
-    }
-  )
+  tags = {
+    Name = "${var.project}-igw"
+  }
 }
 
 resource "aws_route_table" "main" {
@@ -44,12 +36,9 @@ resource "aws_route_table" "main" {
     gateway_id = aws_internet_gateway.main.id
   }
 
-  tags = merge(
-    local.common_tags,
-    {
-      Name = "windows-server-rt"
-    }
-  )
+  tags = {
+    Name = "${var.project}-rt"
+  }
 }
 
 resource "aws_route_table_association" "main" {
@@ -57,8 +46,9 @@ resource "aws_route_table_association" "main" {
   route_table_id = aws_route_table.main.id
 }
 
+# Security Group
 resource "aws_security_group" "windows_rdp" {
-  name        = "windows-rdp-access"
+  name        = "${var.project}-rdp-sg"
   description = "Security group for Windows Server with RDP access"
   vpc_id      = aws_vpc.main.id
 
@@ -77,29 +67,29 @@ resource "aws_security_group" "windows_rdp" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = merge(
-    local.common_tags,
-    {
-      Name = "windows-rdp-sg"
-    }
-  )
+  tags = {
+    Name = "${var.project}-rdp-sg"
+  }
 }
 
+# Key Pair
 resource "tls_private_key" "key_pair" {
   algorithm = "RSA"
   rsa_bits  = 4096
 }
 
 resource "aws_key_pair" "generated_key" {
-  key_name   = "windows-server-key"
+  key_name   = "${var.project}-key"
   public_key = tls_private_key.key_pair.public_key_openssh
 }
 
+# Save private key locally
 resource "local_file" "private_key" {
   content  = tls_private_key.key_pair.private_key_pem
-  filename = "${path.module}/windows-server-key.pem"
+  filename = "${path.module}/${var.project}-key.pem"
 }
 
+# Windows Server Instance
 data "aws_ami" "windows_server" {
   most_recent = true
   owners      = ["amazon"]
@@ -122,7 +112,7 @@ data "aws_ami" "windows_server" {
 
 resource "aws_instance" "windows_server" {
   ami           = data.aws_ami.windows_server.id
-  instance_type = "t2.micro"  # Free tier eligible
+  instance_type = "t2.micro"
 
   subnet_id                   = aws_subnet.main.id
   vpc_security_group_ids      = [aws_security_group.windows_rdp.id]
@@ -130,16 +120,17 @@ resource "aws_instance" "windows_server" {
   associate_public_ip_address = true
 
   root_block_device {
-    volume_size = 30  # Free tier eligible
-    volume_type = "gp2"
+    volume_size = 30
+    volume_type = "gp3"
+    encrypted   = true
   }
 
-  tags = merge(
-    local.common_tags,
-    {
-      Name = var.instance_name,
-      WindowsVersion = data.aws_ami.windows_server.name,
-      InstanceClass = "t2.micro"
-    }
-  )
+  metadata_options {
+    http_endpoint = "enabled"
+    http_tokens   = "required"
+  }
+
+  tags = {
+    Name = var.instance_name
+  }
 }
