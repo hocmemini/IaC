@@ -3,9 +3,12 @@ resource "aws_vpc" "main" {
   enable_dns_hostnames = true
   enable_dns_support   = true
 
-  tags = {
-    Name = "windows-server-vpc"
-  }
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "windows-server-vpc"
+    }
+  )
 }
 
 resource "aws_subnet" "main" {
@@ -14,17 +17,23 @@ resource "aws_subnet" "main" {
   map_public_ip_on_launch = true
   availability_zone       = "${var.aws_region}a"
 
-  tags = {
-    Name = "windows-server-subnet"
-  }
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "windows-server-subnet"
+    }
+  )
 }
 
 resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
 
-  tags = {
-    Name = "windows-server-igw"
-  }
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "windows-server-igw"
+    }
+  )
 }
 
 resource "aws_route_table" "main" {
@@ -35,9 +44,12 @@ resource "aws_route_table" "main" {
     gateway_id = aws_internet_gateway.main.id
   }
 
-  tags = {
-    Name = "windows-server-rt"
-  }
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "windows-server-rt"
+    }
+  )
 }
 
 resource "aws_route_table_association" "main" {
@@ -65,9 +77,12 @@ resource "aws_security_group" "windows_rdp" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = {
-    Name = "windows-rdp-sg"
-  }
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "windows-rdp-sg"
+    }
+  )
 }
 
 resource "tls_private_key" "key_pair" {
@@ -119,7 +134,12 @@ resource "aws_instance" "windows_server" {
     volume_type = "gp2"
   }
 
-  tags = {
-    Name = var.instance_name
-  }
+  tags = merge(
+    local.common_tags,
+    {
+      Name = var.instance_name,
+      WindowsVersion = data.aws_ami.windows_server.name,
+      InstanceClass = "t2.micro"
+    }
+  )
 }
