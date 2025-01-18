@@ -1,7 +1,7 @@
 variable "aws_region" {
   description = "AWS region"
   type        = string
-  default     = "us-east-2"
+  default     = "us-east-1"
 }
 
 variable "instance_name" {
@@ -14,12 +14,6 @@ variable "allowed_rdp_ip" {
   description = "IP address allowed for RDP access"
   type        = string
   default     = "138.88.175.59/32"
-}
-
-variable "environment" {
-  description = "Environment (dev/staging/prod)"
-  type        = string
-  default     = "dev"
 }
 
 variable "project" {
@@ -38,19 +32,4 @@ variable "subnet_cidr" {
   description = "CIDR block for subnet"
   type        = string
   default     = "10.0.1.0/24"
-}
-
-variable "created_date" {
-  description = "Resource creation date"
-  type        = string
-  default     = null
-}
-
-locals {
-  common_tags = {
-    Environment = var.environment
-    Project     = var.project
-    ManagedBy   = "terraform"
-    CreatedDate = coalesce(var.created_date, formatdate("YYYY-MM-DD", timestamp()))
-  }
 }
