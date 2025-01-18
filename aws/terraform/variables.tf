@@ -40,11 +40,17 @@ variable "subnet_cidr" {
   default     = "10.0.1.0/24"
 }
 
+variable "created_date" {
+  description = "Resource creation date"
+  type        = string
+  default     = null
+}
+
 locals {
   common_tags = {
     Environment = var.environment
     Project     = var.project
     ManagedBy   = "terraform"
-    CreatedDate = timestamp()
+    CreatedDate = coalesce(var.created_date, formatdate("YYYY-MM-DD", timestamp()))
   }
 }
