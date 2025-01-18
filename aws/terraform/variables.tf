@@ -22,44 +22,29 @@ variable "environment" {
   default     = "dev"
 }
 
-variable "version" {
-  description = "Version of the infrastructure deployment"
-  type        = string
-  default     = "1.0.0"
-}
-
 variable "project" {
   description = "Project name"
   type        = string
   default     = "windows-server"
 }
 
-variable "owner" {
-  description = "Owner of the resource"
+variable "vpc_cidr" {
+  description = "CIDR block for VPC"
   type        = string
-  default     = "infrastructure-team"
+  default     = "10.0.0.0/16"
 }
 
-variable "managed_by" {
-  description = "Tool/Method used to manage the resource"
+variable "subnet_cidr" {
+  description = "CIDR block for subnet"
   type        = string
-  default     = "terraform"
-}
-
-variable "cost_center" {
-  description = "Cost center for billing purposes"
-  type        = string
-  default     = "infrastructure"
+  default     = "10.0.1.0/24"
 }
 
 locals {
   common_tags = {
     Environment = var.environment
-    Version     = var.version
     Project     = var.project
-    Owner       = var.owner
-    ManagedBy   = var.managed_by
-    CostCenter  = var.cost_center
-    CreatedAt   = timestamp()
+    ManagedBy   = "terraform"
+    CreatedDate = timestamp()
   }
 }
